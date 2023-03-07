@@ -1,0 +1,44 @@
+## default file ##
+.ini
+*.ini
+.env
+*.env
+.config
+*.config
+*.txt
+## ide file ##
+.vscode
+.idea
+.project
+## build file ##
+bin
+*.bat
+*.exe
+*.dll
+*.com
+*.sh
+*.so
+*.o
+## update ##
+new_version
+## nas file ##
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+## log ##
+log
+*.log
+##other file##
+*.tmp
+*.err
+*.rar
+*.7z
+*.zip
+*.gz
+*.tar.gz
+*.dmg
