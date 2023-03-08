@@ -250,7 +250,8 @@ func downAndCheckNewVersion() error {
 	}
 	//验证 下载的md5sum和服务器的md5sum 是否一致
 	if newMd5 != wscUpdateInfo.Md5 {
-		updateLog.Println("下载的md5sum和服务器的不一致!")
+		fmt.Println("[Update] Error 下载的md5sum和服务器的不一致,暂停更新！")
+		updateLog.Println("[Update] Error 下载的md5sum和服务器的不一致!")
 		return errors.New("[Update] 下载的md5sum和服务器的不一致！")
 	}
 	fmt.Println("[Update] 新版本下载完成.")

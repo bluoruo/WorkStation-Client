@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 const aliEndpoint string = "https://alidns.aliyuncs.com/"
@@ -40,12 +41,37 @@ type aliDnsResp struct {
 var AliDnsConfig = &StructAliDnsConfig{}
 var AliDnsUpdateStatus string
 
-func init() {
-
+// RunAliDDns 更新 ali yun dns 入口
+func RunAliDDns(strIp string, recordType string) {
+	AliDnsUpdateStatus = "normal"
+	if recordType == "AAAA" {
+		if strings.Contains(AliDnsConfig.SubDomain, ".v6") == false {
+			AliDnsConfig.SubDomain = AliDnsConfig.SubDomain + ".v6"
+		}
+	}
+	AliDnsConfig.ClientIP = strIp
+	AliDnsConfig.RecordType = recordType
+	var record aliDnsSubDomainRecords
+	// 获取子域名信息
+	params := url.Values{}
+	params.Set("Action", "DescribeSubDomainRecords")
+	params.Set("SubDomain", AliDnsConfig.SubDomain+"."+AliDnsConfig.Domain)
+	params.Set("Type", AliDnsConfig.RecordType)
+	err := aliRequest(params, &record)
+	if err != nil {
+		return
+	}
+	if record.TotalCount > 0 { // 存在
+		//fmt.Println(record)
+		modify(record) //更新
+	} else { // 不存在
+		create()
+	}
 }
 
 // 创建
 func create() {
+	checkIpv6SubDomain() // 去掉多余的 .v6
 	params := url.Values{}
 	params.Set("Action", "AddDomainRecord")
 	params.Set("DomainName", AliDnsConfig.Domain)
@@ -73,7 +99,7 @@ func modify(record aliDnsSubDomainRecords) {
 		fmt.Printf("你的IP %s 没有变化, 域名 %s", AliDnsConfig.ClientIP, AliDnsConfig.SubDomain)
 		return
 	}
-
+	checkIpv6SubDomain() // 去掉多余的 .v6
 	params := url.Values{}
 	params.Set("Action", "UpdateDomainRecord")
 	params.Set("RR", AliDnsConfig.SubDomain)
@@ -94,28 +120,10 @@ func modify(record aliDnsSubDomainRecords) {
 	}
 }
 
-// RunAliDDns 更新 ali yun dns
-func RunAliDDns(strIp string, recordType string) {
-	AliDnsUpdateStatus = "normal"
-	if recordType == "AAAA" {
+// 取出子域名中多余的 .v6
+func checkIpv6SubDomain() {
+	if strings.Contains(AliDnsConfig.SubDomain, ".v6") {
+		AliDnsConfig.SubDomain = strings.TrimSuffix(AliDnsConfig.SubDomain, ".v6")
 		AliDnsConfig.SubDomain = AliDnsConfig.SubDomain + ".v6"
-	}
-	AliDnsConfig.ClientIP = strIp
-	AliDnsConfig.RecordType = recordType
-	var record aliDnsSubDomainRecords
-	// 获取子域名信息
-	params := url.Values{}
-	params.Set("Action", "DescribeSubDomainRecords")
-	params.Set("SubDomain", AliDnsConfig.SubDomain+"."+AliDnsConfig.Domain)
-	params.Set("Type", AliDnsConfig.RecordType)
-	err := aliRequest(params, &record)
-	if err != nil {
-		return
-	}
-	if record.TotalCount > 0 { // 存在
-		//fmt.Println(record)
-		modify(record) //更新
-	} else { // 不存在
-		create()
 	}
 }
