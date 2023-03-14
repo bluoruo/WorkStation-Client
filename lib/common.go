@@ -72,14 +72,22 @@ func HttpClient(strUrl string, strType string, strParam string) string {
 	req, err := http.NewRequest(strType, strUrl, strings.NewReader(strParam))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
-		panic(err)
+		fmt.Println(" Error 构造", strUrl, "请求", strType, "错误:", err)
+		Logger.Println(" Error 构造", strUrl, "请求", strType, "错误:", err)
+		return ""
 	}
-	resp, _ := client.Do(req)
-
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(" Error 发送", strUrl, "请求", strType, "错误:", err)
+		Logger.Println(" Error 发送", strUrl, "请求", strType, "错误:", err)
+		return ""
+	}
 	//返回数据
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		fmt.Println(" Error ", strUrl, "的返回数据", body, "错误:", err)
+		Logger.Println(" Error ", strUrl, "的返回数据", body, "错误:", err)
+		return ""
 	}
 	strBody := string(body)
 	//fmt.Println(strBody)
@@ -90,7 +98,8 @@ func HttpClient(strUrl string, strType string, strParam string) string {
 	if status == 200 {
 		return strBody
 	} else {
-		fmt.Println("http请求错误：", status)
+		fmt.Println(" Error ", strUrl, "请求成功,但代码错误:", status)
+		Logger.Println(" Error ", strUrl, "请求成功,但代码错误:", status)
 		return "error"
 	}
 }
@@ -135,10 +144,10 @@ func HttpPost(url string, param string, paramType string) (_result []byte, _err 
 		}
 	} else {
 		errMsg, _ := io.ReadAll(res.Body)
-		fmt.Println("url:", url)
-		fmt.Println("param:", param)
-		fmt.Println("错误的返回消息: ", string(errMsg))
-		_err = MyErr(status, "http错误代码:"+strconv.Itoa(status))
+		fmt.Println("请求:", url, "参数:", param)
+		fmt.Println("请求成功，但是代码错误:", string(errMsg))
+		_err = MyErr(status, "请求成功，但是代码错误:"+strconv.Itoa(status))
+		Logger.Println(" Error 请求:", url, "参数:", param, "成功，但是代码错误:", status)
 	}
 	return _result, _err
 }
@@ -148,6 +157,7 @@ func AnyJson(byteJson []byte) map[string]interface{} {
 	resMap := make(map[string]interface{}, 0)
 	if err := json.Unmarshal(byteJson, &resMap); err != nil {
 		fmt.Println("解析Json失败: ", err)
+		Logger.Println(" Error 解析Json失败:", err)
 	}
 	return resMap
 }
@@ -158,6 +168,7 @@ func CheckWssReturn(body []byte) (string, bool) {
 	err := json.Unmarshal(body, &arrRes)
 	if err != nil {
 		fmt.Println("解析服务器返回信息错误！")
+		Logger.Println(" Error 解析服务器返回信息错误:", err)
 	}
 	if arrRes["code"] == "0" {
 		strRes, _ := json.Marshal(arrRes["data"])
